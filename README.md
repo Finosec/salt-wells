@@ -12,7 +12,7 @@ A full playthrough takes about **30 minutes**. There are many ways out. Most of 
 
 ## ▸ Play
 
-**[Play it here]([#](https://Finosec.github.io/salt-wells/))**
+**[Play it here](https://Finosec.github.io/salt-wells/)**
 
 ---
 
