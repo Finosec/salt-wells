@@ -14,7 +14,7 @@ A full playthrough takes about **30 minutes**. There are many ways out. Most of 
 
 ## ▸ Play
 
-**[Play it here](#)** — *(replace this with your live link once published, e.g. `https://your-username.github.io/salt-wells/`)*
+**[Play it here](https://finosec.github.io/salt-wells/)**
 
 Or run it locally: download the files and open **`index.html`** in any modern browser. No install, no internet required, nothing to set up.
 
