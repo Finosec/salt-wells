@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SALT WELLS — The Darkening</title>
+<style>
+  :root{
+    --black:#0c0b0a; --char:#15130f; --char2:#1e1a14;
+    --paper:#e8ddca; --paper-dim:#b7ad9b; --ink:#cabfa8;
+    --amber:#e0a449; --ember:#c9772f; --gold:#f2c14e;
+    --red:#b23b2d; --red-deep:#7d271d;
+    --grey:#8a8d8c; --grey-deep:#4a4d4c;
+    --green:#7c8a55; --blue:#7d96a6;
+    --line:#3a342a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--black);}
+  body{
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    color:var(--ink);
+    line-height:1.62;
+    min-height:100vh;
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(224,164,73,0.06), transparent 60%),
+      radial-gradient(140% 100% at 50% 120%, rgba(60,62,61,0.10), transparent 55%),
+      var(--black);
+  }
+  /* film grain / ash */
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:0.05;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    mix-blend-mode:overlay;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:28px 22px 90px;position:relative;z-index:1;}
+
+  /* ---------- header / meters ---------- */
+  header.hud{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg, rgba(12,11,10,0.97) 70%, rgba(12,11,10,0));
+    padding:10px 0 14px;margin-bottom:6px;
+    border-bottom:1px solid var(--line);
+  }
+  .titleband{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .gametitle{
+    font-variant:small-caps;letter-spacing:3px;color:var(--paper-dim);
+    font-size:0.78rem;text-transform:lowercase;
+  }
+  .gametitle b{color:var(--amber);letter-spacing:4px;}
+  .meters{display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;font-size:0.7rem;letter-spacing:1px;}
+  .meter{display:flex;align-items:center;gap:6px;text-transform:uppercase;color:var(--paper-dim);}
+  .pips{display:flex;gap:3px;}
+  .pip{width:13px;height:7px;background:#2a261f;border:1px solid #000;border-radius:1px;}
+  .pip.on.hp{background:var(--ember);box-shadow:0 0 5px rgba(201,119,47,.6);}
+  .pip.on.strain{background:var(--gold);box-shadow:0 0 6px rgba(242,193,78,.7);}
+  .pip.on.noise{background:var(--red);box-shadow:0 0 5px rgba(178,59,45,.6);}
+  .squad{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .chip{
+    font-size:0.66rem;letter-spacing:1px;text-transform:uppercase;
+    padding:2px 9px;border:1px solid var(--line);border-radius:11px;color:var(--paper-dim);
+  }
+  .chip.ok{border-color:var(--green);color:#aebf86;}
+  .chip.hurt{border-color:var(--ember);color:var(--amber);}
+  .chip.lost{border-color:var(--grey-deep);color:var(--grey);text-decoration:line-through;}
+  .chip.item{border-color:var(--amber);color:var(--amber);border-radius:3px;}
+
+  /* ---------- art slot ---------- */
+  .art{
+    margin:8px 0 20px;border:1px solid var(--line);
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.012) 0 8px, transparent 8px 16px),
+      linear-gradient(160deg,#17140f,#0e0c0a);
+    border-radius:4px;overflow:hidden;position:relative;
+    box-shadow:inset 0 0 60px rgba(0,0,0,0.7);
+  }
+  .art img{display:block;width:100%;height:auto;}
+  .art img.missing{display:none;}
+  .art .placeholder{
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    text-align:center;min-height:128px;padding:20px;color:var(--grey);
+  }
+  .art .placeholder.hide{display:none;}
+  .art .ph-key{font-variant:small-caps;letter-spacing:2px;color:var(--amber);font-size:0.8rem;}
+  .art .ph-cap{font-size:0.74rem;color:var(--paper-dim);margin-top:6px;max-width:520px;font-style:italic;}
+  .art .ph-hint{font-size:0.62rem;color:var(--grey-deep);margin-top:9px;letter-spacing:1px;text-transform:uppercase;}
+
+  /* ---------- scene ---------- */
+  .scenehead{margin:4px 0 12px;}
+  .loc{font-variant:small-caps;letter-spacing:3px;color:var(--amber);font-size:1.15rem;}
+  .sub{color:var(--grey);font-size:0.74rem;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+  .prose p{margin:0 0 14px;}
+  .prose p.first::first-letter{
+    font-size:2.7rem;line-height:0.8;float:left;padding:6px 9px 0 0;color:var(--amber);
+    font-weight:bold;
+  }
+  .whisper{color:var(--grey);font-style:italic;}
+  .goldtext{color:var(--gold);text-shadow:0 0 9px rgba(242,193,78,.35);}
+  .redtext{color:var(--red);}
+  .reveal{
+    border-left:2px solid var(--gold);background:rgba(242,193,78,0.05);
+    padding:9px 14px;margin:0 0 16px;font-style:italic;color:#d8c98f;font-size:0.95rem;
+  }
+  .reveal.r{border-color:var(--red);background:rgba(178,59,45,0.06);color:#d6a99f;}
+  .reveal.g{border-color:var(--green);background:rgba(124,138,85,0.06);color:#c2cf9a;}
+
+  /* ---------- choices ---------- */
+  .choices{margin-top:18px;display:flex;flex-direction:column;gap:10px;}
+  button.choice{
+    text-align:left;font-family:inherit;font-size:1rem;color:var(--paper);
+    background:linear-gradient(180deg,#1c1813,#141009);
+    border:1px solid var(--line);border-left:3px solid var(--amber);
+    padding:12px 15px;border-radius:3px;cursor:pointer;transition:all .14s ease;
+    line-height:1.45;
+  }
+  button.choice:hover{
+    border-left-color:var(--gold);background:linear-gradient(180deg,#241e16,#181209);
+    transform:translateX(3px);box-shadow:-4px 0 16px rgba(224,164,73,0.12);
+  }
+  button.choice .tag{
+    display:inline-block;font-size:0.6rem;letter-spacing:1.5px;text-transform:uppercase;
+    padding:1px 7px;border-radius:8px;margin-right:9px;vertical-align:middle;
+    border:1px solid currentColor;
+  }
+  button.choice .cost{float:right;font-size:0.64rem;color:var(--grey);letter-spacing:1px;
+    text-transform:uppercase;font-style:italic;margin-left:10px;}
+  /* power buttons */
+  .p-sally{border-left-color:var(--gold);} .p-sally .tag{color:var(--gold);}
+  .p-rami{border-left-color:var(--red);} .p-rami .tag{color:var(--red);}
+  .p-lina{border-left-color:var(--green);} .p-lina .tag{color:#aebf86;}
+  .p-sally:hover{box-shadow:-4px 0 16px rgba(242,193,78,0.2);}
+  .p-rami:hover{box-shadow:-4px 0 16px rgba(178,59,45,0.2);}
+  .p-lina:hover{box-shadow:-4px 0 16px rgba(124,138,85,0.2);}
+  button.choice.used{opacity:0.4;}
+  button.choice .sub2{display:block;font-size:0.74rem;color:var(--paper-dim);margin-top:3px;font-style:italic;}
+
+  /* ---------- endings ---------- */
+  .ending-banner{
+    text-align:center;font-variant:small-caps;letter-spacing:4px;
+    padding:14px;margin:6px 0 16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    font-size:1.5rem;
+  }
+  .ending-banner small{display:block;font-size:0.7rem;letter-spacing:2px;color:var(--paper-dim);margin-top:4px;font-variant:normal;}
+  .tone-good .ending-banner{color:var(--gold);text-shadow:0 0 14px rgba(242,193,78,.4);}
+  .tone-mixed .ending-banner{color:var(--amber);}
+  .tone-bad .ending-banner{color:var(--grey);}
+  .tone-death .ending-banner{color:var(--red);text-shadow:0 0 12px rgba(178,59,45,.35);}
+
+  .restart{
+    margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center;
+  }
+  .restart button{
+    font-family:inherit;background:transparent;color:var(--amber);border:1px solid var(--amber);
+    padding:9px 22px;letter-spacing:2px;text-transform:uppercase;font-size:0.74rem;cursor:pointer;
+    border-radius:2px;transition:all .15s;
+  }
+  .restart button:hover{background:var(--amber);color:var(--black);}
+  .restart .tally{font-size:0.66rem;color:var(--grey);letter-spacing:1px;text-transform:uppercase;}
+
+  /* ---------- title screen ---------- */
+  #title{text-align:center;padding-top:6vh;}
+  #title .big{
+    font-variant:small-caps;letter-spacing:10px;font-size:3rem;color:var(--paper);
+    text-shadow:0 0 30px rgba(224,164,73,0.25);margin:0;
+  }
+  #title .series{letter-spacing:6px;color:var(--ember);font-size:0.8rem;text-transform:uppercase;margin-top:4px;}
+  #title .tag{color:var(--grey);font-style:italic;max-width:540px;margin:22px auto;font-size:1.02rem;}
+  #title .rule{width:60px;height:1px;background:var(--amber);margin:18px auto;opacity:0.6;}
+  #title .start{
+    font-family:inherit;background:transparent;color:var(--gold);border:1px solid var(--gold);
+    padding:13px 40px;letter-spacing:4px;text-transform:uppercase;font-size:0.9rem;cursor:pointer;
+    border-radius:2px;transition:all .2s;margin-top:6px;
+  }
+  #title .start:hover{background:var(--gold);color:var(--black);box-shadow:0 0 26px rgba(242,193,78,0.45);}
+  #title .legend{margin:34px auto 0;max-width:560px;text-align:left;font-size:0.8rem;color:var(--paper-dim);}
+  #title .legend h4{color:var(--amber);font-variant:small-caps;letter-spacing:2px;margin:0 0 8px;font-size:0.95rem;}
+  #title .legend .pw{margin:6px 0;}
+  #title .legend .pw b{color:var(--paper);}
+  .sallyc{color:var(--gold);} .ramic{color:var(--red);} .linac{color:#aebf86;}
+  .hidden{display:none;}
+  @media(max-width:560px){ #title .big{font-size:2.1rem;letter-spacing:5px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= TITLE ================= -->
+  <div id="title">
+    <img src="art/title.jpg" alt="Salt Wells" style="width:100%;max-width:600px;margin:0 auto 18px;display:block;border:1px solid var(--line);border-radius:4px;box-shadow:0 0 40px rgba(0,0,0,0.6);" onerror="this.style.display='none'">
+    <h1 class="big">Salt Wells</h1>
+    <div class="series">The Darkening · A Book One Wayside</div>
+    <div class="rule"></div>
+    <p class="tag">Week two on the road east. The condenser cracked at dawn and you are three days dry.
+    A waymark totem points down a dead off-ramp to a highway town that should have water — and is far too quiet.
+    Sundown is coming. So is something else.</p>
+    <button class="start" onclick="begin()">Walk In</button>
+
+    <div class="legend">
+      <h4>Your hands, and theirs</h4>
+      <p>You play <b>Sally Adler</b>, seventeen, the Compass cold in your jacket. Lina and Rami are at your shoulders. Three gifts between you — and every one of them bites the hand that uses it.</p>
+      <p class="pw"><b class="sallyc">▸ Read the Threads</b> — your Strategic Intuition. Glimpse where a choice leads before you take it. <i>Costs Strain. Lean on it too hard and the world stops feeling real.</i></p>
+      <p class="pw"><b class="ramic">▸ Push</b> — Rami's Kinetic Adaptation. Speed and force past human limit. <i>Costs Strain. His nerves are already fraying.</i></p>
+      <p class="pw"><b class="linac">▸ Reach</b> — Lina's Empathic Resonance. Feel the living and the lost; quiet a Broken; read a stranger's intent. <i>Costs Strain. What she feels, she keeps.</i></p>
+      <p style="margin-top:14px;color:var(--grey);"><b style="color:var(--gold)">Strain</b> is shared. Fill the bar and you don't just lose — you <i>slide</i>. There are many ways out of Salt Wells. Most of them are bad. Find a good one. Then find a better one.</p>
+    </div>
+  </div>
+
+  <!-- ================= GAME ================= -->
+  <div id="game" class="hidden">
+    <header class="hud">
+      <div class="titleband">
+        <div class="gametitle"><b>Salt Wells</b> · the darkening</div>
+        <div class="sub" id="clock">dusk</div>
+      </div>
+      <div class="meters">
+        <div class="meter">Wounds <div class="pips" id="m-hp"></div></div>
+        <div class="meter">Strain <div class="pips" id="m-strain"></div></div>
+        <div class="meter">Noise <div class="pips" id="m-noise"></div></div>
+      </div>
+      <div class="squad" id="squad"></div>
+    </header>
+
+    <div id="scene"></div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================================
+   THE DARKENING — SALT WELLS
+   A self-contained branching text adventure.
+   ========================================================================= */
+
+const S = {}; // game state
+function freshState(){
+  return {
+    hp:3, strain:0, noise:0,
+    water:false, coil:false,
+    lina:'ok', rami:'ok',
+    items:{}, // token, blade, lantern, ledger
+    flags:{}, // arbitrary
+    powerUses:{thread:0,push:0,reach:0},
+    clock:'dusk',
+    visited:{}
+  };
+}
+
+/* ---------- art prompts (captions shown in slot until you drop a PNG named art/<key>.png) ---------- */
+const ART = {
+  approach:{cap:"The squad on the dead off-ramp at dusk, looking down at Salt Wells — a highway town gone silent, waymark totem in foreground, amber sky bruising to grey.", file:"approach"},
+  street:{cap:"The main drag of Salt Wells at last light — sun-bleached storefronts, a toppled fuel sign, no movement, dust holding still in the air.", file:"street"},
+  stilled:{cap:"A man seated upright in a doorway, eyes open, unblinking, face turned south; a tin cup beside him dried to a white salt ring. Not Broken — empty.", file:"stilled"},
+  diner:{cap:"Inside a ruined highway diner: a Broken nest of nested booths and hoarded objects, slack grey figures looping in the dark, one clutching a child's shoe.", file:"diner"},
+  wellhouse:{cap:"A padlocked cinderblock well-house behind a gas station, a hand-pump inside, water-stain halo on concrete, the only wet thing for miles.", file:"wellhouse"},
+  church:{cap:"A small desert church repurposed into a hidden Loam root node — carved root-and-seed glyphs, seed jars, a low circular sanctuary lit warm amber.", file:"church"},
+  scorchers:{cap:"A Scorcher patrol entering town at dusk — ash-grey robes, flame-mask, ember-red glow, dragging a brand; firelight against blackened storefronts.", file:"scorchers"},
+  compass:{cap:"Sally's hand around the Compass as it wakes — aged brass and cracked glass, amber-gold seams flaring, gold light spilling between her fingers in the dark.", file:"compass"},
+  road:{cap:"Dawn on the highway east, three figures walking out of frame, the town small behind them, warm light returning to a grey world.", file:"road"},
+  south:{cap:"A lone figure walking south into a flat grey haze, color draining from the frame, the silence with no edge — Pallor's distant tide.", file:"south"}
+};
+
+/* helpers used inside scenes */
+function wound(n=1){ S.hp=Math.max(0,S.hp-n); }
+function heal(n=1){ S.hp=Math.min(3,S.hp+n); }
+function strain(n=1){ S.strain=Math.min(5,S.strain+n); }
+function noise(n=1){ S.noise=Math.min(3,S.noise+n); }
+function has(i){ return !!S.items[i]; }
+function give(i){ S.items[i]=true; }
+
+/* =========================================================================
+   SCENES
+   each: { art, loc, sub, text:[...], reveals optional, choices:[...] , ending }
+   choice: { t, sub, to, p('sally'|'rami'|'lina'), cost, need(s), do(s), once }
+   text/choice strings may contain inline html.
+   ========================================================================= */
+const SCENES = {
+
+/* ---------------- ACT 1 — THE APPROACH ---------------- */
+intro:{
+  art:"approach", loc:"The Off-Ramp", sub:"week two · sundown",
+  text:[
+    "<span class='whisper'>Three days dry.</span> The condenser cracked outside Holbrook and Rami's lips have gone the colour of old paper. The waymark totem at the off-ramp is a stack of hubcaps and a child's bicycle welded skyward, one arm pointing down into a town the maps used to call Salt Wells.",
+    "From up here it looks intact. That's the first wrong thing. Roofs unburned, a fuel sign still standing, glass still in half the windows — and not one light, not one cookfire, not one dog. A town this whole should have people. The wind moves the dust and the dust comes back down in the same place.",
+    "\"Water's water,\" Rami rasps. \"I'd drink out of a Broken's boot right now.\" Lina says nothing. She's gone still the way she goes still when there's too much of something to feel, or nothing at all.",
+    "Sundown in maybe forty minutes. You can go in clever or you can go in fast."
+  ],
+  choices:[
+    {t:"Down the main road, eyes open", sub:"Straight in past the storefronts. Fast. Exposed.", to:"street", do:()=>{noise(1);} },
+    {t:"Circle to the back along the dry wash", sub:"Slower, quieter, behind the buildings.", to:"wash" },
+    {t:"Send your senses ahead first", p:"sally", cost:"Strain +1", sub:"Read the Threads — feel the shape of the town before you commit.", to:"thread_town", do:()=>{strain(1);S.powerUses.thread++;}, once:"threadtown" },
+    {t:"Have Lina reach for whatever's living down there", p:"lina", cost:"Strain +1", sub:"Reach — count the minds before you walk into them.", to:"reach_town", do:()=>{strain(1);S.powerUses.reach++;}, once:"reachtown" }
+  ]
+},
+
+thread_town:{
+  loc:"The Off-Ramp", sub:"reading the threads",
+  text:[
+    "You let the cold part of your mind off its leash. The town unfolds into <span class='goldtext'>lines of consequence</span> — not pictures, exactly, but weights, the way a chess position has weight before you see the moves."
+  ],
+  reveal:{c:"", t:"Two pressures sit in Salt Wells. One is <b>old and patient</b>, clustered tight around the diner at the town's heart — a knot of grief that loops and loops and does not leave. The other is <b>not here yet</b> but coming: a heat on the south road, deliberate, moving in formation. <span class='redtext'>Whatever's coming walks on purpose.</span> The quiet way in is the back wash. The water is east, behind the fuel station. And the church — the church pulls at the Compass like a magnet you can't see."},
+  choices:[
+    {t:"Slip in along the back wash", sub:"You know where the knot is now. Avoid it.", to:"wash", do:()=>{S.flags.knewdiner=true;} },
+    {t:"Go straight for the water, east side", sub:"Skip the town's heart entirely.", to:"wash", do:()=>{S.flags.knewdiner=true;S.flags.beelinewater=true;} },
+    {t:"Down the main road anyway — speed over caution", to:"street", do:()=>{noise(1);} }
+  ]
+},
+
+reach_town:{
+  loc:"The Off-Ramp", sub:"reaching",
+  text:[
+    "Lina closes her eyes and tips her head like she's listening to rain you can't hear. Her breath shortens. When she speaks her voice has someone else's grief folded into it."
+  ],
+  reveal:{c:"g", t:"\"There are people. Or — there <i>were</i>. A clutch of them, close together, but they're <b>worn smooth</b>, Sally. Like a word you've said so many times it stops being a word. They aren't hungry. They're just… circling.\" She frowns, presses her thumb under her ear. \"And one. One alone, off east, that I can't feel at all. Not asleep. Not Broken. Just — a hole where a person should be. <span class='whisper'>I don't like it. Don't make me go near it.</span>\""},
+  choices:[
+    {t:"In along the back wash, away from the clutch", to:"wash", do:()=>{S.flags.knewdiner=true;} },
+    {t:"Down the main road, get it over with", to:"street", do:()=>{noise(1);} },
+    {t:"Ask Lina to hold the soothing in reserve", sub:"She nods, pale. She'll have it ready when the looping ones wake.", to:"wash", do:()=>{S.flags.linaready=true;S.flags.knewdiner=true;} }
+  ]
+},
+
+street:{
+  art:"street", loc:"Main Street, Salt Wells", sub:"the town's throat",
+  text:[
+    "<span class='first'></span>The main drag swallows you. Storefronts lean over the road, their signs sun-bleached to ghosts — <span class='whisper'>DRUG, FEED, EATS</span>. A pickup sits on flat tires in the middle of the street, doors open, as if everyone stepped out at once and never finished the thought.",
+    "Your boots are loud. Everything is loud. Salt Wells has the acoustics of a held breath.",
+    "Halfway down, you see him. A man, seated in the doorway of the old pharmacy, upright, hands in his lap. Watching the south end of the street. He does not turn his head as you approach."
+  ],
+  choices:[
+    {t:"Approach the seated man", to:"stilled" },
+    {t:"Give him a wide berth, keep moving to the fuel station east", to:"hub", do:()=>{S.flags.skippedman=true;} },
+    {t:"Read the Threads on him before you get closer", p:"sally", cost:"Strain +1", to:"stilled_thread", do:()=>{strain(1);S.powerUses.thread++;}, once:"threadman" }
+  ]
+},
+
+wash:{
+  loc:"The Dry Wash", sub:"behind the town's teeth",
+  text:[
+    "The wash runs the length of Salt Wells, a concrete throat for water that hasn't come in years. You move along it bent low, the buildings' back doors and busted fences sliding past on your right. Quieter here. The town can't hear you as well.",
+    "Through a gap between a feed store and a gutted church you can see the main street — and a man seated in a pharmacy doorway, upright, facing south, perfectly still. East, past the church, the squat shape of a fuel station and a cinderblock outbuilding promise water. West, the church door hangs open on warm dark.",
+    "Rami touches your arm. \"That guy been sitting like that the whole time. Not once moved.\""
+  ],
+  choices:[
+    {t:"Climb up to look at the seated man", to:"stilled" },
+    {t:"Make for the fuel station and the water", to:"hub" },
+    {t:"Slip into the open church", to:"church", need:s=>true, do:()=>{S.flags.cameviachurch=true;} }
+  ]
+},
+
+stilled_thread:{
+  loc:"Main Street", sub:"reading the threads",
+  text:["You reach for the lines around the seated man and find — nothing. No move, no countermove, no weight at all. It's like reading a chessboard with no pieces. Your intuition <span class='whisper'>slides off him</span> and finds only one thread, faint, pointing south. Not <i>his</i> thread. The thread of the thing he's facing."],
+  reveal:{c:"r", t:"Cold crawls up the back of your neck. You have read men about to die, men about to lie, Broken about to lunge. You have never read an <b>absence</b> before. Whatever took him didn't kill him. It <i>subtracted</i> him. And it's still out there, south, where his face is pointed."},
+  choices:[
+    {t:"Approach him anyway", to:"stilled", do:()=>{S.flags.warned=true;} },
+    {t:"Leave him. Get the water and get out.", to:"hub", do:()=>{S.flags.skippedman=true;} }
+  ]
+},
+
+stilled:{
+  art:"stilled", loc:"The Seated Man", sub:"do not look south",
+  text:[
+    "Up close he's ordinary. Sixties, a mechanic's hands, a wedding ring worn to a thread. His eyes are open and wet and tracking nothing. A tin cup sits beside him, the water in it long gone, leaving a white salt ring baked to the bottom.",
+    "He is breathing. His chest rises, falls, rises. When Lina crouches near him her face crumples. \"There's no one in there,\" she whispers. \"Not gone like the Broken go. The Broken still <i>echo</i>. He's just… the silence got him. He walked here on his own legs and sat down when the <i>him</i> ran out.\"",
+    "His lips move. The faintest sound. You have to put your ear close to catch it: <span class='whisper'>\"…it's quiet down there. It's so quiet. You should come and be quiet too.\"</span>",
+    "He is still facing south."
+  ],
+  choices:[
+    {t:"Pour your last mouthful of water past his lips", sub:"He cannot drink it. But you did it anyway.", to:"hub", do:()=>{S.flags.mercyman=true;} },
+    {t:"Take the knife from his belt and go", sub:"He won't need it. A salt-iron blade is a salt-iron blade.", to:"hub", do:()=>{give('blade');S.flags.tookmanblade=true;} },
+    {t:"Have Lina reach all the way into him", p:"lina", cost:"Strain +2", sub:"Reach — find out what emptied him.", to:"stilled_reach", do:()=>{strain(2);S.powerUses.reach++;}, once:"reachman" },
+    {t:"Back away. Now. Get to the water.", to:"hub" }
+  ]
+},
+
+stilled_reach:{
+  loc:"The Seated Man", sub:"reaching too far",
+  text:[
+    "\"Sally, don't make me—\" but you've already given the smallest nod, and Lina is loyal to the bone. She lays two fingers on the man's wrist and <i>reaches</i>.",
+    "She goes rigid. Her pupils blow wide. For three seconds she is not in Salt Wells with you — she is south, in a place with no edges, where a grey patience the size of weather is rolling north one mile at a time, and it is not cruel, it is not anything, it simply <i>arrives</i> and where it arrives you stop."
+  ],
+  reveal:{c:"r", t:"Lina rips her hand back and vomits into the dust. She's shaking, eyes streaming, but lucid. \"It's coming, Sally. Not the Broken — something <i>behind</i> the Broken. It's why the town's empty. It came through and it'll come again and we cannot be here when it does.\" She wipes her mouth. \"I'll feel that for the rest of my life. Please can we just get the water.\" <span class='whisper'>(Lina is shaken — her next Reach will cost more.)</span>"},
+  choices:[
+    {t:"Get the water. Move.", to:"hub", do:()=>{S.flags.linashaken=true;S.lina= S.lina==='ok'?'hurt':S.lina;} }
+  ]
+},
+
+/* ---------------- ACT 2 — THE TOWN (HUB) ---------------- */
+hub:{
+  loc:"Salt Wells", sub:"choose your ground",
+  text:[
+    ()=> S.flags.hubseen ? "You're back at the heart of it, the light a shade lower, the air a shade colder." :
+      "You stand where the town's three promises meet. East: the <b>fuel station</b> and its locked well-house, where the water is. The town's heart holds the <b>diner</b>, dark and somehow full. West: the open <b>church</b>, and the strange tug it puts on the Compass in your jacket.",
+    ()=> "Light's going. " + (S.noise>=2 ? "<span class='redtext'>And something in the diner has started to move — you can hear it shifting, a slow dragging, like furniture being rearranged by people who've forgotten what furniture is for.</span>" : "Every minute here is a minute the south road gets shorter.")
+  ],
+  do:()=>{S.flags.hubseen=true; if(S.noise>=2) S.flags.nestStirring=true;},
+  choices:[
+    {t:"The well-house — get the water", sub:"East. The whole reason you came.", to:"well" },
+    {t:"The diner — there may be salvage, a coil, food", sub:"The town's heart. Whatever's in there is in there.", to:"diner_door" },
+    {t:"The church — follow the Compass", sub:"West. The Compass won't stop pulling.", to:"church" },
+    {t:"Cut your losses — leave Salt Wells empty-handed", sub:"Alive and dry beats the alternatives.", to:"end_dryleave", need:s=>s.flags.hubseen }
+  ]
+},
+
+/* ---------------- THE WELL-HOUSE ---------------- */
+well:{
+  art:"wellhouse", loc:"The Well-House", sub:"water, behind a lock",
+  text:[
+    "Behind the fuel station squats a cinderblock shed, and inside it — you can see through the wire-glass window — a hand-pump over a real well, the concrete around it haloed with old water stain. Wet. Actually wet. Rami makes a sound that's almost a sob.",
+    "The door is steel, and it's padlocked. A heavy brass padlock, rusted but solid, on a hasp bolted deep. The window is wire-reinforced, too small to climb. Someone wanted this water kept.",
+    ()=> S.noise>=2 ? "<span class='redtext'>And back toward the diner, the dragging sound has become footsteps. More than one set.</span>" : "The light is nearly gone."
+  ],
+  choices:[
+    {t:"Rami forces the hasp", p:"rami", cost:"Strain +1 · Noise +1", sub:"Push — tear the bolts out of the block.", to:"well_push", do:()=>{strain(1);noise(1);S.powerUses.push++;} },
+    {t:"Pick the lock with the salt-iron blade", sub:"Slow, quiet, if you have the tool and the nerve.", to:"well_pick", need:s=>has('blade') },
+    {t:"Search the fuel station for a key", sub:"Whoever locked it kept a key somewhere.", to:"well_key", once:"wellkey" },
+    {t:"Read the Threads on the lock", p:"sally", cost:"Strain +1", sub:"Find the one approach that doesn't end badly.", to:"well_thread", do:()=>{strain(1);S.powerUses.thread++;}, once:"wellthread" },
+    {t:"Leave it — try the diner or church instead", to:"hub" }
+  ]
+},
+
+well_thread:{
+  loc:"The Well-House", sub:"reading the threads",
+  text:["You let the lock become a problem with a shape. The threads bloom."],
+  reveal:{t:"Forcing it brings the footsteps running — that path ends in teeth. There <b>is</b> a key: in the fuel station, in the till drawer, under a rag, where a frightened man hid it before he walked south. Quiet, clean, if you go now. And if you have a blade, the hasp is older than the lock — the <i>screws</i> are the weak point, not the shackle."},
+  choices:[
+    {t:"Go for the key in the station till", to:"well_key", do:()=>{S.flags.knowkey=true;}, once:"wellkey" },
+    {t:"Work the hasp screws with the blade", sub:"Quietly.", to:"well_pick", need:s=>has('blade'), do:()=>{S.flags.smartpick=true;} },
+    {t:"Forget subtlety — have Rami force it", p:"rami", cost:"Strain +1 · Noise +1", to:"well_push", do:()=>{strain(1);noise(1);S.powerUses.push++;} }
+  ]
+},
+
+well_key:{
+  loc:"The Fuel Station", sub:"the till",
+  text:[
+    "Inside the station the air is thick with old dust and older fear. The till drawer hangs open. You sweep your hand under the rubber mat and the rag beneath it — and there: a small brass key, still warm-feeling the way metal is when a hand held it last in terror.",
+    ()=> S.flags.knowkey ? "Exactly where the threads said." : "Someone hid this and then didn't come back for it."
+  ],
+  do:()=>{give('key'); if(!S.flags.knewdiner && Math.random()<0.5){} },
+  choices:[
+    {t:"Open the well-house and drink", to:"well_open" }
+  ]
+},
+
+well_pick:{
+  loc:"The Well-House", sub:"steady hands",
+  text:[
+    ()=> S.flags.smartpick ?
+      "You set the salt-iron tip to the first hasp screw and turn. The wood-rot gives. One screw, two, three — the whole plate sags off the door with a soft groan and the lock comes away still locked, useless, beaten by the thing it was bolted to." :
+      "You work the blade into the shackle, feeling for the pins. It's clumsy — a knife is not a pick — and it takes long, sweating minutes, the metal shrieking faintly each time you slip. Twice you nearly drop it. But the cheap rust works for you, and finally the shackle pops.",
+    ()=> S.flags.smartpick ? "Quiet. Clean. The door swings." :
+      (Math.random()<1 ? "" : "")
+  ],
+  do:()=>{ if(!S.flags.smartpick){ noise(1);} },
+  choices:[
+    {t:"Open the well-house and drink", to:"well_open" }
+  ]
+},
+
+well_push:{
+  loc:"The Well-House", sub:"the loud way",
+  text:[
+    "Rami sets his shoulder, and you watch the air around him do the thing it does — a shimmer, a wrongness, as his Kinetic Adaptation pours strength into a body that wasn't built to hold it. He <i>heaves</i>.",
+    "The hasp doesn't unscrew. It detonates. Bolts fire out of the cinderblock, the steel door clangs wide, and the sound goes rolling down every silent street in Salt Wells like a bell.",
+    "Rami staggers, nose bleeding, a tremor running up his arm he can't quite hide. \"Worth it,\" he grins, red-toothed. \"Tell me it's worth it.\""
+  ],
+  do:()=>{ if(S.rami==='ok') S.rami= S.strain>=4?'hurt':'ok'; if(S.strain>=4) S.rami='hurt'; },
+  choices:[
+    {t:"Get inside and drink, fast", to:"well_open" }
+  ]
+},
+
+well_open:{
+  loc:"The Well-House", sub:"water",
+  text:[
+    "The pump screams on the first stroke and then gives — a gout of cold, iron-tasting, glorious water. You drink until your teeth ache. Rami laughs like a kid. Lina fills the skins, the canteens, the cracked condenser jar, everything that holds.",
+    "<span class='goldtext'>You have water. Whatever else happens, you have water.</span>",
+    ()=> S.noise>=2 ? "<span class='redtext'>And the footsteps you heard are no longer footsteps. They're a chorus, dragging closer, drawn to the sound of the breaking door.</span>" :
+      "For one minute, the dread lifts."
+  ],
+  do:()=>{ S.water=true; heal(1); },
+  choices:[
+    {t:"Go for the coil in the diner while you're ahead", sub:"You came for the condenser part too. Press your luck.", to:"diner_door", need:s=>!s.coil },
+    {t:"Head to the church and the Compass before you leave", to:"church", need:s=>!s.flags.churchdone },
+    {t:"Enough. Get out of Salt Wells alive.", to:"escape_check" }
+  ]
+},
+
+/* ---------------- THE DINER (BROKEN NEST) ---------------- */
+diner_door:{
+  art:"diner", loc:"The Diner", sub:"the town's full heart",
+  text:[
+    "The diner's glass front is intact, and behind it the dark is <i>furnished</i>. Booths have been dragged into a rough spiral, packed with hoarded things — shoes, picture frames, a hundred coffee mugs stacked into towers, a child's tricycle hung from the ceiling fan. Nesting behaviour. Stage-one Broken, the looping kind, build like this.",
+    "You count shapes in the gloom. Five, maybe six, swaying gently, each locked in its own small ritual. One folds and refolds a napkin. One presses a phone that hasn't worked in ten years to its ear and waits, and waits, and presses it again. None have noticed you yet.",
+    ()=> (S.flags.knewdiner? "<span class='whisper'>You knew they'd be here. Knowing doesn't make the air any easier to breathe.</span> " : "") + "Somewhere in that spiral there could be a condenser coil — diners ran refrigeration. There could also be the last hour of your life."
+  ],
+  choices:[
+    {t:"Creep in low and search the spiral", sub:"Slow. Silent. Pray they stay in their loops.", to:"diner_creep" },
+    {t:"Have Lina soothe them first", p:"lina", cost:"Strain +2", sub:"Reach — wrap the looping ones in calm so you can move freely.", to:"diner_soothe", do:()=>{ strain(S.flags.linashaken?3:2); S.powerUses.reach++;}, once:"dinersoothe" },
+    {t:"Read the Threads — where's the coil, where's the danger", p:"sally", cost:"Strain +1", to:"diner_thread", do:()=>{strain(1);S.powerUses.thread++;}, once:"dinerthread" },
+    {t:"Not worth it. Back out.", to:"hub" }
+  ]
+},
+
+diner_thread:{
+  loc:"The Diner", sub:"reading the threads",
+  text:["You map the spiral as a board. Pieces, sightlines, the cold arithmetic of who turns when."],
+  reveal:{t:"The coil is real — a compressor unit behind the counter, coil intact, ten feet in. Between you and it: the napkin-folder (harmless, won't look up) and a big one in the corner you mistook for furniture — a <b>Sentinel</b>, stage two, territorial, that will wake if you cross the third floor tile or make a sound above a whisper. The clean line hugs the left wall. One wrong board and the Sentinel turns the whole spiral feral at once."},
+  choices:[
+    {t:"Take the clean line, left wall, to the coil", to:"diner_creep", do:()=>{S.flags.dinerthreaded=true;} },
+    {t:"Have Lina soothe them — too risky raw", p:"lina", cost:"Strain +2", to:"diner_soothe", do:()=>{strain(S.flags.linashaken?3:2);S.powerUses.reach++;}, once:"dinersoothe" },
+    {t:"Back out. The Sentinel's not worth a coil.", to:"hub" }
+  ]
+},
+
+diner_soothe:{
+  loc:"The Diner", sub:"the lullaby",
+  text:[
+    "Lina steps in ahead of you — which is the bravest thing any of you will do tonight — and opens herself to the room.",
+    "It's like watching someone walk into surf. The grief of six dissolving minds hits her all at once and she sways, but she pushes <i>back</i>, pouring calm into the spiral, a wordless lullaby pitched under hearing. One by one the Broken slow. The napkin settles. The phone lowers. The big shape in the corner sighs out a breath that rattles the windows and goes still.",
+    ()=> S.flags.linashaken ? "<span class='redtext'>But she's already cracked from the seated man. Her nose starts to bleed. \"Go,\" she grinds out. \"Fast. I can't — I can't hold the corner one long.\"</span>" :
+      "\"I've got them,\" she breathes. \"They're not gone, Sally, they're just <i>quiet</i>. Be quick. Be kind.\""
+  ],
+  do:()=>{ S.flags.soothed=true; if(S.flags.linashaken){ S.lina='hurt'; } },
+  choices:[
+    {t:"Move fast — grab the coil from behind the counter", to:"diner_coil", do:()=>{ if(S.flags.linashaken){S.flags.soothetimer=true;} } },
+    {t:"Search wider while they're calm — food, salvage", sub:"Greedy. The clock is Lina's nose.", to:"diner_greedy", need:s=>!s.flags.linashaken }
+  ]
+},
+
+diner_creep:{
+  loc:"The Diner", sub:"one wrong board",
+  text:[
+    ()=> S.flags.dinerthreaded ?
+      "You hug the left wall exactly as the threads showed, weight rolling heel-to-toe, breathing through your mouth. The napkin-folder doesn't look up. You skirt the third tile. The Sentinel in the corner stays furniture. Ten feet has never been so far — and then the counter is under your hands and the compressor is right there." :
+      "You ease in low. The first three booths are nothing. Then your boot finds a loose tile and it <i>ticks</i> against the frame underneath — barely a sound, but in this silence it's a gunshot.",
+    ()=> S.flags.dinerthreaded ? "" :
+      "The shape you took for furniture in the corner <b>turns its head</b>. Reflective eyes catch what little light there is. A Sentinel. Stage two. It rises, and the rest of the spiral begins, one by one, to stop their loops and orient on you."
+  ],
+  choices:[
+    ()=> S.flags.dinerthreaded ?
+      {t:"Take the coil and go", to:"diner_coil"} :
+      {t:"Freeze — don't move a muscle", sub:"Maybe it loses interest. Maybe.", to:"diner_freeze"},
+    ()=> S.flags.dinerthreaded ? null :
+      {t:"Lina, soothe them NOW", p:"lina", cost:"Strain +2", to:"diner_soothe", do:()=>{strain(S.flags.linashaken?3:2);S.powerUses.reach++;}},
+    ()=> S.flags.dinerthreaded ? null :
+      {t:"Rami — clear a path to the door", p:"rami", cost:"Strain +2 · Noise +1", to:"diner_fight", do:()=>{strain(2);noise(1);S.powerUses.push++;}}
+  ]
+},
+
+diner_freeze:{
+  loc:"The Diner", sub:"don't move",
+  text:[
+    "You become a statue. The Sentinel takes one step. Two. Its breath fogs in the cold. The napkin-folder has stopped folding. The whole spiral is awake now and listening with bodies that don't quite remember they're bodies.",
+    "It comes down to one held breath. Whose nerve breaks first."
+  ],
+  choices:[
+    {t:"Read the one gap and bolt for the door", p:"sally", cost:"Strain +1", to:"diner_bolt", do:()=>{strain(1);S.powerUses.thread++;} },
+    {t:"Rami — explode through them to the exit", p:"rami", cost:"Strain +2 · Noise +1", to:"diner_fight", do:()=>{strain(2);noise(1);S.powerUses.push++;} },
+    {t:"Lina — last-second soothe", p:"lina", cost:"Strain +3", sub:"Raw, panicked, expensive.", to:"diner_soothe", do:()=>{strain(3);S.powerUses.reach++;} },
+    {t:"Duck into the walk-in cooler and wait them out", sub:"Steel walls. Surely they'll lose interest.", to:"end_stuck_cooler" },
+    {t:"Stay frozen. Don't move. Don't breathe.", sub:"Maybe the loop reclaims them.", to:"end_nest" }
+  ]
+},
+
+diner_bolt:{
+  loc:"The Diner", sub:"the gap",
+  text:[
+    "Time slows the way it does for you now. The spiral becomes vectors — where each body will lurch, the half-second the Sentinel commits to the wrong angle, the one slot of empty floor that opens and closes like a heartbeat.",
+    "\"NOW,\" you breathe, and the three of you pour through the gap a half-second before it closes. A grey hand rakes your jacket. Another closes on Rami's pack and he tears free of it. Then you're through the door and out into the blue dark, the diner emptying behind you in a slow, dreadful, dragging flood."
+  ],
+  do:()=>{ noise(2); S.flags.nestloose=true; if(Math.random()<0.4) {wound(1);} },
+  choices:[
+    {t:"Run for the church — it can be barred", to:"church", need:s=>!s.flags.churchdone, do:()=>{S.flags.fleetochurch=true;} },
+    {t:"Run for the well-house if you haven't been", to:"well", need:s=>!s.water },
+    {t:"Just run — get out of Salt Wells", to:"escape_check" }
+  ]
+},
+
+diner_fight:{
+  loc:"The Diner", sub:"kinetic",
+  text:[
+    "Rami goes <i>off</i>. The shimmer wraps him head to foot and he becomes something that shouldn't be possible — faster than thought, hitting the Sentinel with a shoulder that folds it backward over a booth, spinning, clearing a lane through grey bodies with brutal economy.",
+    "\"GO!\" he roars, and you go, dragging Lina, the diner a blur of reaching arms and the wet sounds of Rami not being gentle.",
+    "You burst out the door. A second later Rami follows, walking wrong, one leg dragging, a string of blood from his nose to his chin and his hand shaking so hard he can't make a fist. \"I'm good,\" he lies. \"I'm good.\""
+  ],
+  do:()=>{ noise(2); S.rami= S.rami==='ok'?'hurt':'lost'; S.flags.nestloose=true; if(S.strain>=4) wound(1); },
+  choices:[
+    {t:"Get him to the church to bar the door", to:"church", need:s=>!s.flags.churchdone, do:()=>{S.flags.fleetochurch=true;} },
+    {t:"Run for the open road, now", to:"escape_check" }
+  ]
+},
+
+diner_coil:{
+  loc:"The Diner", sub:"the prize",
+  text:[
+    "Behind the counter the old compressor sits in its cage of dust. You work the copper coil free with shaking fingers — intact, unkinked, exactly the part the condenser needs. You ease it into your pack.",
+    ()=> S.flags.soothed ? (S.flags.soothetimer ?
+      "<span class='redtext'>Lina's holding on by a thread — literally swaying, blood on her lip. You have what you came for. Move.</span>" :
+      "Lina's lullaby holds the room in glassy calm. The Broken sway, dreaming. <span class='whisper'>One, the napkin-folder, has tears running down its grey face. It's the closest thing to peace any of them have had in years.</span>") :
+      "The Sentinel hasn't turned. You got lucky, or good, or both. Don't waste it."
+  ],
+  do:()=>{ S.coil=true; },
+  choices:[
+    {t:"Slip back out, quiet as you came", to:"hub", need:s=>!s.flags.nestloose },
+    {t:"Get water at the well-house next", to:"well", need:s=>!s.water },
+    {t:"Make for the church and the Compass", to:"church", need:s=>!s.flags.churchdone },
+    {t:"Leave Salt Wells now", to:"escape_check" }
+  ]
+},
+
+diner_greedy:{
+  loc:"The Diner", sub:"one minute too long",
+  text:[
+    "You can't help it — three days dry and starving makes you stupid. While Lina holds the room you sweep the back: a tin of peaches, a sealed jar of pickles, a coil of good wire, and yes, the compressor coil. Your pack fills.",
+    "Then Lina makes a small sound. When you look, her eyes have rolled white and she's still on her feet only because the calm she's pouring out is the only thing holding her up too. The Broken are beginning, very slowly, to stir.",
+    "\"...Sally,\" she says, from very far away. \"I have to let go now.\""
+  ],
+  do:()=>{ S.coil=true; give('food'); S.flags.nearbreak=true; },
+  choices:[
+    {t:"Grab her and run before she drops the lullaby", to:"diner_bolt", do:()=>{strain(1);} },
+    {t:"Rami, carry her — clear the door", p:"rami", cost:"Strain +2 · Noise +1", to:"diner_fight", do:()=>{strain(2);noise(1);S.powerUses.push++;} }
+  ]
+},
+
+/* ---------------- THE CHURCH (LOAM NODE) ---------------- */
+church:{
+  art:"church", loc:"The Church", sub:"the Compass won't be still",
+  text:[
+    "The church is small, adobe and beam, and the moment you cross the threshold the Compass in your jacket goes <span class='goldtext'>warm</span> — not the cold pull it gives toward Houston and your father, but something else, something close. It hums against your ribs.",
+    "The pews have been pulled aside. The floor's been opened. And the walls — under the old whitewash, someone has carved them: <b>roots, seeds, a corn-stalk circle</b>, glyphs you half-recognise from the underside of Aunt Jo's grain-store door. Sealed clay jars line a low shelf. Seed vault. Knowledge. Sanctuary.",
+    "\"This is a Loam node,\" Lina breathes, and there's something strange in her voice — recognition she's trying to hide. \"A root node. They mark the safe ones. This is a <i>door</i>.\""
+  ],
+  choices:[
+    {t:"Search the node — there's a reason it's hidden", to:"church_search" },
+    {t:"Let the Compass lead you to whatever it senses", p:"sally", cost:"Strain +1", sub:"Read the Threads through the Compass itself.", to:"church_compass", do:()=>{strain(1);S.powerUses.thread++;}, once:"churchcompass" },
+    {t:"Ask Lina what she's not telling you", sub:"She knew these glyphs too fast.", to:"church_lina", once:"churchlina" },
+    {t:"Bar the doors and use this as a bolt-hole", sub:"If something's coming, these walls are thick.", to:"church_bar", need:s=>s.flags.nestloose || s.flags.fleetochurch }
+  ]
+},
+
+church_lina:{
+  loc:"The Church", sub:"a crack in the story",
+  text:[
+    "Lina won't meet your eyes. Her thumb finds the leather pouch at her throat — her mother's pouch, prayer stone and dried flowers — and worries it.",
+    "\"My parents were Loam,\" she says finally, which is true, and not the whole truth, and you both know it. \"I know the marks. That's all. The corn circle means <i>shelter offered</i>. The broken ring by the door means <i>a node that's lost its keeper</i>.\" She swallows. \"It means whoever ran this place is one of the ones outside now. Or south.\"",
+    "<span class='whisper'>There's more. There's always more with Lina. But not tonight.</span>"
+  ],
+  do:()=>{ S.flags.linatrust = (S.flags.linatrust||0)+1; },
+  choices:[
+    {t:"Let it go. Search the node.", to:"church_search" },
+    {t:"Use the Compass to read the place", p:"sally", cost:"Strain +1", to:"church_compass", do:()=>{strain(1);S.powerUses.thread++;}, once:"churchcompass" }
+  ]
+},
+
+church_compass:{
+  art:"compass", loc:"The Church", sub:"gold in the dark",
+  text:[
+    "You take the Compass out and let it sit open on your palm, and it answers — brass and cracked glass flaring with seams of <span class='goldtext'>gold light</span> that spill between your fingers and throw root-shadows up the carved walls.",
+    "It's pointing at the floor. At the opened section, and the dark beneath it. And threaded through the gold, faint as a struck wire dying out, you feel it: a <b>tunnel</b>. The Loam dug their nodes to connect. This one runs north, under the town, under the wash, out past the off-ramp. <span class='goldtext'>A way out that never touches the street.</span>"
+  ],
+  reveal:{c:"g", t:"More than that — the Compass shows you the node's purpose laid bare: a cache under the altar stone. The keeper's last gift before they walked away. <span class='whisper'>Take it, and the Loam will know you found their door — that can open more doors, later, on a long road east.</span>"},
+  choices:[
+    {t:"Open the altar cache", to:"church_search", do:()=>{S.flags.knowcache=true;} },
+    {t:"Take the tunnel out now", sub:"Clean exit, no street, no Scorchers, no nest.", to:"end_loamtunnel", need:s=>s.water||s.coil, do:()=>{S.flags.tunnel=true;} },
+    {t:"Take the tunnel — even empty-handed", sub:"Alive is alive.", to:"end_loamtunnel_dry", need:s=>!s.water&&!s.coil, do:()=>{S.flags.tunnel=true;} }
+  ]
+},
+
+church_search:{
+  loc:"The Church", sub:"the keeper's gift",
+  text:[
+    "Under the altar stone — which moves too easily, counterweighted, Loam-made — there's a cache wrapped in oilcloth. Inside: a clay token stamped with the corn-circle (a Loam passphrase-in-object, Lina says, worth its weight in trust on the road), a tight roll of waxed maps marking water and nodes east toward Texas, and a stoppered gourd of clean water.",
+    ()=> "There's also a hatch in the floor, propped open. Cold air breathes up from it. <span class='goldtext'>A tunnel — north, under the town and out past the off-ramp.</span> The Loam never built a sanctuary without a back door.",
+    ()=> S.flags.nestloose ? "<span class='redtext'>Behind you, through the barred-or-unbarred doors, the dragging flood from the diner is finding the church.</span>" : ""
+  ],
+  do:()=>{ give('token'); give('maps'); if(!S.water){S.water=true;} S.flags.churchdone=true; },
+  choices:[
+    {t:"Take the tunnel out — clean exit, north", to:"end_loamtunnel", do:()=>{S.flags.tunnel=true;} },
+    {t:"Bar the doors first and rest a moment", to:"church_bar" },
+    {t:"Not yet — go for the coil in the diner", to:"diner_door", need:s=>!s.coil&&!s.flags.nestloose }
+  ]
+},
+
+church_bar:{
+  loc:"The Church", sub:"thick walls",
+  text:[
+    "You and Rami drag the heavy pews against both doors and drop the old beam-bar into its brackets. The walls are adobe a foot thick. For the first time since the off-ramp, you can hear yourself think.",
+    ()=> S.flags.nestloose ? "Outside, the Broken arrive. They press against the doors — not battering, just <i>leaning</i>, a slow dreadful weight, grey faces at the wire-glass, looking in with eyes that almost remember what longing was for." :
+      "Outside, the town holds its silence. But you can feel the night tightening.",
+    ()=> "And then, under the leaning weight or under the silence, a new sound from the south end of the street: <span class='redtext'>a hymn.</span> Voices, rough and rhythmic, and the crackle of pitch torches. <span class='redtext'>Someone is coming up the main road carrying fire.</span>"
+  ],
+  do:()=>{ S.flags.barred=true; S.flags.scorchersComing=true; },
+  choices:[
+    {t:"Take the tunnel and disappear before they arrive", to:"end_loamtunnel", need:s=>s.flags.churchdone||s.flags.knowcache, do:()=>{S.flags.tunnel=true;} },
+    {t:"Look out the wire-glass to see who carries the fire", to:"scorchers_arrive" },
+    {t:"Open the altar cache if you haven't", to:"church_search", need:s=>!s.flags.churchdone }
+  ]
+},
+
+/* ---------------- THE SCORCHERS ---------------- */
+scorchers_arrive:{
+  art:"scorchers", loc:"Main Street", sub:"children of the pyre",
+  text:[
+    "Six of them, ash-grey robes and a flame-mask leading. Scorchers — the Purifying Flame — and they move up the dead street with the calm of people who believe fire has already decided everything. They drag a brand that throws sparks across the dust. They are singing about cleansing.",
+    "They're not hunting you. Not yet. They're here for the same reason you are — water, salvage, maybe the seated man, whom they will call <i>blessed</i> and try to burn. But Scorchers read auras, and yours, Sally, burns brighter than anyone alive. If their mask-leader looks at the church and <i>sees</i> you—",
+    ()=> S.flags.nestloose ? "<span class='redtext'>And the Broken are already here, leaning on the doors. Two threats, one street, and you in the middle.</span>" :
+      "The mask turns slowly toward the church. The Compass at your ribs goes cold with warning."
+  ],
+  choices:[
+    {t:"Slip out the tunnel before they see you", p:"", sub:"The smart move. Vanish.", to:"end_loamtunnel", need:s=>s.flags.churchdone, do:()=>{S.flags.tunnel=true;S.flags.dodgedscorch=true;} },
+    {t:"Read the mask-leader's intent through the Threads", p:"sally", cost:"Strain +1", to:"scorch_thread", do:()=>{strain(1);S.powerUses.thread++;}, once:"scorchthread" },
+    {t:"Let the Broken and the Scorchers find each other", sub:"Open the door a crack. Let the nest smell the fire.", to:"scorch_pit", need:s=>s.flags.nestloose },
+    {t:"Step out and face them — parley or bluff", sub:"Reckless. But sometimes the wolf respects the one who doesn't run.", to:"scorch_face" }
+  ]
+},
+
+scorch_thread:{
+  loc:"The Church", sub:"reading the threads",
+  text:["You read the mask-leader the way you read a board. The threads come fast and ugly."],
+  reveal:{c:"r", t:"This one's not a believer — she's a <b>handler</b>, the kind who uses the faith without drowning in it. She already suspects the church is occupied. In ninety seconds she'll send two to the doors. If she sees your aura she won't burn you here; she'll <i>collar</i> you and march you south as a prize. The only threads that don't end in fire or a collar: the tunnel, or turning her own people's fear of the Broken against her."},
+  choices:[
+    {t:"Tunnel. Go now, while there's time.", to:"end_loamtunnel", need:s=>s.flags.churchdone, do:()=>{S.flags.tunnel=true;S.flags.dodgedscorch=true;} },
+    {t:"Turn their fear loose — open the door to the nest", to:"scorch_pit", need:s=>s.flags.nestloose },
+    {t:"No tunnel ready — bluff her at the door", to:"scorch_face" }
+  ]
+},
+
+scorch_pit:{
+  loc:"The Church", sub:"let the dark meet the fire",
+  text:[
+    "You crack the south door — just enough. The leaning Broken smell the pitch-smoke, hear the hymn, and the looping grey heads turn as one toward the new warmth, the new sound, the new <i>everything</i>. The nest peels off the church and floods toward the Scorchers like water finding a drain.",
+    "The hymn breaks into shouting. Fire blooms on the main street. The Scorchers are veterans of burning the Broken — they'll win — but it will cost them, and it will hold their attention for exactly as long as you need.",
+    "\"That,\" Rami says, watching grey bodies and ash-robes collide in firelight, \"is the most messed-up thing I've ever seen you do. Respect.\""
+  ],
+  do:()=>{ S.flags.pitused=true; S.noise=Math.max(0,S.noise-1); },
+  choices:[
+    {t:"Slip out the tunnel in the chaos", to:"end_loamtunnel", need:s=>s.flags.churchdone||s.flags.knowcache, do:()=>{S.flags.tunnel=true;} },
+    {t:"Out the back on foot while they're busy", to:"escape_check" }
+  ]
+},
+
+scorch_face:{
+  loc:"Main Street", sub:"face the fire",
+  text:[
+    "You step out of the church into torchlight with your hands open and your chin up. Six Scorchers stop. The flame-mask tilts.",
+    "\"Walk on,\" you say, in Aunt Jo's flattest patrol voice. \"This town's dry and the diner's full of Broken. Nothing here but a bad night.\"",
+    "A long silence. The mask studies you — and you feel the exact moment her gaze snags on the <span class='goldtext'>glow</span> she can see and you can't, the aura that marks you Awakened, that marks you <i>bright</i>. Her hand drifts to the collar coiled at her belt.",
+    "\"...Sister,\" the Red Mouth's handler purrs. \"You're <i>lit up</i>. The flame's been waiting for one like you.\""
+  ],
+  choices:[
+    {t:"Rami — drop her before she signals the others", p:"rami", cost:"Strain +2 · Noise +1", to:"scorch_fight", do:()=>{strain(2);noise(1);S.powerUses.push++;} },
+    {t:"Read the gap and run for the church tunnel", p:"sally", cost:"Strain +1", to:"scorch_run", do:()=>{strain(1);S.powerUses.thread++;} },
+    {t:"Lina — flood them with their own buried fear", p:"lina", cost:"Strain +3", sub:"Reach — six minds at once. Brutal on her.", to:"scorch_lina", do:()=>{strain(3);S.powerUses.reach++;} },
+    {t:"Raise your hands. Surrender, and wait for an opening.", sub:"Buy time. Trust there'll be a gap later.", to:"end_pyre" }
+  ]
+},
+
+scorch_fight:{
+  loc:"Main Street", sub:"kinetic vs flame",
+  text:[
+    "Rami moves before the word is finished. He crosses the gap in a blink and the handler folds. But Scorchers are made for violence and there are five more, and Kira Varn drills her enforcers to die smiling.",
+    "It's fast and bad. Rami is a blur, breaking the line, but a torch catches his sleeve and a fire-trial veteran lays a brand across his back before you and Lina can drag him clear, hauling him toward the church and the tunnel mouth as the street goes up behind you."
+  ],
+  do:()=>{ S.rami='hurt'; wound(1); S.flags.scorchhostile=true; noise(1); },
+  choices:[
+    {t:"Into the tunnel — go, go, go", to:"end_scorchburn", need:s=>s.flags.churchdone||s.flags.knowcache, do:()=>{S.flags.tunnel=true;} },
+    {t:"No tunnel — break for the open road and pray", to:"escape_check", do:()=>{S.flags.scorchhostile=true;} }
+  ]
+},
+
+scorch_run:{
+  loc:"Main Street", sub:"the gap",
+  text:[
+    "The street resolves into threads — torch arcs, the handler's reaching hand, the swing of the collar, the one black slot of shadow between the feed store and the church.",
+    "\"Back,\" you breathe, and you're moving, all three of you, the Scorchers a half-second behind and closing. You hit the church, slam the bar down behind you, and the hatch is right there, breathing cold."
+  ],
+  do:()=>{ noise(1); S.flags.scorchhostile=true; },
+  choices:[
+    {t:"Down the tunnel and gone", to:"end_loamtunnel", need:s=>s.flags.churchdone||s.flags.knowcache, do:()=>{S.flags.tunnel=true;S.flags.escapedscorch=true;} },
+    {t:"You never opened the cache — no tunnel. Bar up and fight.", to:"end_lastsiege", need:s=>!(s.flags.churchdone||s.flags.knowcache) }
+  ]
+},
+
+scorch_lina:{
+  loc:"Main Street", sub:"the cost of feeling",
+  text:[
+    "Lina steps up beside you and does the thing she swore she'd never do to the living. She reaches into all six of them at once and finds the thing every Scorcher buries under doctrine — the <i>terror</i> the fire is supposed to burn away — and she gives it all back to them at full volume.",
+    "The handler screams. They all scream, clawing at masks, at memories, at the children they were before Eden's Promise burned. The street empties of everything but firelight and weeping.",
+    "And Lina — Lina drops. Out cold, dead weight, blood sheeting from her nose, her breath too shallow. Whatever she just carried, she's still carrying it."
+  ],
+  do:()=>{ S.lina='hurt'; strain(1); S.flags.linabroke=true; if(S.strain>=5){} },
+  choices:[
+    {t:"Carry her into the tunnel — get her out", to:"end_linacost", need:s=>s.flags.churchdone||s.flags.knowcache, do:()=>{S.flags.tunnel=true;} },
+    {t:"No tunnel — carry her to the open road", to:"escape_check", do:()=>{S.flags.carrylina=true;} }
+  ]
+},
+
+/* ---------------- ESCAPE RESOLUTION ON FOOT ---------------- */
+escape_check:{
+  loc:"The Edge of Town", sub:"the open road",
+  text:[
+    ()=> "You break for the off-ramp on foot, the way you came. " +
+      (S.flags.nestloose? "The loosed nest drags after you, slow but tireless. " : "") +
+      (S.flags.scorchhostile? "Torchlight bobs behind you, and a hymn turned to a hunting song. " : ""),
+    ()=> S.noise>=3 ? "<span class='redtext'>Salt Wells has woken all the way up, and everything in it wants you to stay.</span>" :
+      "The dark is on your side, mostly. The totem-stack marks the on-ramp ahead."
+  ],
+  choices:[
+    {t:"Read the Threads for the clean line out", p:"sally", cost:"Strain +1", to:"escape_thread", do:()=>{strain(1);S.powerUses.thread++;}, once:"escthread" },
+    {t:"Rami pushes a path and you all run flat-out", p:"rami", cost:"Strain +2", to:"escape_push", do:()=>{strain(2);S.powerUses.push++;} },
+    {t:"Just run, ordinary and human, and hope", to:"escape_plain" },
+    {t:"Cut straight through the middle of them", sub:"No finesse. Bull through. This will hurt.", to:"escape_charge", need:s=>s.flags.nestloose||s.flags.scorchhostile }
+  ]
+},
+
+escape_charge:{
+  loc:"The Edge of Town", sub:"through the teeth",
+  text:[
+    ()=> "You don't go around. You go through. It's a blur of grey hands and torchlight and your own blood loud in your ears — "+
+      (S.flags.nestloose&&S.flags.scorchhostile? "the nest on one side, the fire on the other, and you in the meat of it." :
+       "everything that wants you reaching at once."),
+    "You come out the far side of Salt Wells torn and staggering, leaving pieces of yourselves on the asphalt. Some of you came out worse than others."
+  ],
+  do:()=>{ wound( (S.flags.nestloose&&S.flags.scorchhostile)?2:2 ); if(S.rami==='ok')S.rami='hurt'; },
+  choices:[
+    {t:"Onto the open highway, if you're still standing", to:"router_escape" }
+  ]
+},
+
+escape_thread:{
+  loc:"The Edge of Town", sub:"the clean line",
+  text:["The chase becomes geometry. Every pursuer is a vector, every alley a probability. You thread the three of you between them like a needle through a closing wound — left at the feed store, through the gap in the fence, up the wash where the Broken can't get traction."],
+  do:()=>{ if(S.strain>=5) S.flags.slidehere=true; },
+  choices:[
+    {t:"Up the on-ramp and gone", to:"router_escape" }
+  ]
+},
+
+escape_push:{
+  loc:"The Edge of Town", sub:"raw speed",
+  text:[
+    "Rami burns everything he has left. He half-carries the two of you in surges of impossible speed, covering ground no human should — and pays for every stride. By the on-ramp he's spent, shaking, blood on his lip, but you're <i>out</i>, the town falling behind."
+  ],
+  do:()=>{ S.rami = S.rami==='ok'?'hurt':S.rami; if(S.strain>=5) S.flags.slidehere=true; },
+  choices:[
+    {t:"Onto the open highway", to:"router_escape" }
+  ]
+},
+
+escape_plain:{
+  loc:"The Edge of Town", sub:"no powers, just legs",
+  text:[
+    ()=> (S.flags.nestloose||S.flags.scorchhostile) ?
+      "You run on nothing but terror and tendon. It's close — a grey hand, a thrown brand, a stumble that nearly ends it — but the dark and the distance and dumb luck carry you up the on-ramp and out." :
+      "Nothing's truly chasing you. You walk fast out of the silent town and up the ramp, hearts hammering at shadows, and Salt Wells lets you go."
+  ],
+  do:()=>{ if((S.flags.nestloose||S.flags.scorchhostile) && S.hp<=1){S.flags.nearlydied=true;} if((S.flags.nestloose||S.flags.scorchhostile)&&Math.random()<0.35) wound(1); },
+  choices:[
+    {t:"Onto the open highway", to:"router_escape" }
+  ]
+},
+
+/* ---------------- ROUTER: pick the ending from state ---------------- */
+router_escape:{
+  router:true
+},
+
+/* =========================================================================
+   ENDINGS
+   ========================================================================= */
+end_loamtunnel:{
+  ending:"good", art:"road",
+  banner:"The Roots Remember",
+  sub:"a good ending",
+  text:[
+    "The tunnel runs cold and close and <span class='goldtext'>safe</span>, Loam-dug, root-braced, surfacing in a culvert north of the off-ramp under a sky going to stars. Salt Wells sits behind you, none the wiser. You never had to spend yourselves to the bone.",
+    ()=> (S.water&&S.coil) ? "You have water and the coil both — the condenser will run by morning. You have a Loam token in your pocket and maps east in your pack. You came for survival and you walked out with a future." :
+      (S.water? "You have water, and the keeper's maps, and a Loam token that will open doors all the way to Texas. The coil can wait for the next dead town." :
+      "You have the keeper's gift — token, maps, a gourd of clean water. Not everything you wanted. Enough to go on."),
+    ()=> S.flags.linatrust ? "Lina runs her thumb over the carved corn-circle one last time before you go. Whatever she's not telling you, tonight she chose your safety over her secret. That's a kind of answer." : "",
+    "Rami drinks, and grins, and for once doesn't bleed. \"Onward, boss,\" he says. East. Toward Houston. Toward your father, dying with your name in his mouth.",
+    "<span class='whisper'>And far to the south, where a man sits facing a quiet that has no edge, the grey patience rolls one more mile north. You got out of Salt Wells. The thing that emptied it isn't done.</span>"
+  ]
+},
+end_loamtunnel_dry:{
+  ending:"mixed", art:"road",
+  banner:"Empty-Handed, Alive",
+  sub:"a survivable ending",
+  text:[
+    "You take the tunnel with nothing but your skins as dry as when you came in. It surfaces north of town under cold stars. No water, no coil — but all three of you breathing, and a Loam door logged in your memory for the trip back.",
+    "Rami doesn't complain, which is how you know how bad the thirst is. \"Next town,\" he croaks. \"Next town we don't get clever. We just drink.\"",
+    "<span class='whisper'>Survival today bought against survival tomorrow. The oldest math on the road. You walk east into it.</span>"
+  ]
+},
+end_dryleave:{
+  ending:"mixed", art:"road",
+  banner:"The Wolf That Walks Away",
+  sub:"a cautious ending",
+  text:[
+    "You look at the silent town, the locked water, the furnished dark of the diner, the fire you can feel coming on the south wind — and you do the hardest thing a thirsty person can do. You turn around and leave.",
+    "Salt Wells keeps its water and its secrets and its seated man facing south. You keep your three lives and your low Strain and the cold comfort of a decision your gut will never quite forgive.",
+    "\"There'll be other wells,\" you tell Rami, who is too dry to argue. <span class='whisper'>The smartest survivors are the ones still alive to feel like cowards. You'll drink tomorrow.</span>"
+  ]
+},
+end_scorchburn:{
+  ending:"mixed", art:"road",
+  banner:"Ash for Ash",
+  sub:"a costly ending",
+  text:[
+    "You make the tunnel with the street on fire behind you and a Scorcher brand still smoking on Rami's back. You get out. But you didn't get out <i>clean</i>.",
+    "The handler in the flame-mask saw your aura, Sally. She'll carry your face south to Kira Varn and the Eternal Flame, and somewhere a tally now has your name on it: <span class='redtext'>a bright one, loose on the eastern road.</span>",
+    ()=> S.water||S.coil ? "At least you didn't leave empty-handed." : "And you left with nothing but the burn and the bounty.",
+    "<span class='whisper'>Salt Wells cost more than water. Some debts on this road don't come due until Houston.</span>"
+  ]
+},
+end_linacost:{
+  ending:"mixed", art:"road",
+  banner:"What She Carries",
+  sub:"a bittersweet ending",
+  text:[
+    "You carry Lina up the tunnel in your arms, Rami at your back, the Scorchers left weeping in a street they'll never speak of. She's breathing. She's alive. She is not, you suspect, entirely <i>here</i>.",
+    "She comes round under the stars, north of town, and the first thing she does is apologise — to <i>them</i>, the Scorchers, for what she made them feel. \"They were children once,\" she whispers. \"I gave them back the worst night of their lives.\"",
+    "You got the water" + "" ,
+    ()=> S.water? " — you have the water, and the coil if you took it, and your whole squad living." : " out, at least, even if your skins are dry.",
+    "<span class='whisper'>Lina used herself as a weapon tonight and it left a mark that won't fade. Watch her. The empathy that saves you is the same gift that will one day be too much to hold.</span>"
+  ]
+},
+end_clean:{
+  ending:"good", art:"road",
+  banner:"Clean Water",
+  sub:"the best ending",
+  text:[
+    "You walk out of Salt Wells the way few people ever leave anywhere on this road: <span class='goldtext'>whole.</span> Water in every skin. The coil in your pack, the condenser as good as fixed. All three of you on your own two feet, Strain low, wounds light, the town none the wiser behind you.",
+    "You played it like a board and you won every exchange. The seated man stays in his doorway, facing south; you couldn't save him, but you didn't add yourselves to his silence, and tonight that's a victory.",
+    ()=> has('token') ? "A Loam token rides in your pocket and maps of the water east ride in your pack. You didn't just survive Salt Wells. You came out richer than you went in." : "You didn't just survive Salt Wells — you mastered it.",
+    "Rami throws an arm around each of you. \"Okay,\" he admits. \"Okay. You're scary good at this.\" Lina almost smiles.",
+    "<span class='whisper'>East, then. Toward Houston, and a father, and the truth about the dark. But that's tomorrow's road. Tonight, you drink, and you live, and you are — for one more night — three kids who got out clean.</span>"
+  ]
+},
+end_thread_master:{
+  ending:"good", art:"road",
+  banner:"The Thread Holds",
+  sub:"a good ending, with a shadow",
+  text:[
+    "You threaded Salt Wells like a needle. Every choice read, every danger seen a half-second before it became one. You leave with what you came for and not a drop of blood spilled that you didn't choose to spill.",
+    "Rami's looking at you, though. So is Lina. Because somewhere back there, around the third or fourth time you said <i>NOW</i> in that flat, far-away voice, you stopped sounding like their friend and started sounding like a tactician moving pieces.",
+    "\"You good?\" Rami asks. And the honest answer — the one you don't say — is that the cold place in your head felt <i>better</i> than the warm one. Cleaner. Easier.",
+    "<span class='whisper'>You got everyone out. You always will, now. That's the gift, and the cost, and the warning. The girl who can see every thread is slowly forgetting how to be tangled up in them. Remember this town, Sally. Remember it felt good.</span>"
+  ]
+},
+end_slide:{
+  ending:"bad", art:"south",
+  banner:"The Slide",
+  sub:"a fate worse than dying",
+  text:[
+    "You pushed too hard. Read too many threads, pushed too much power, asked too much of the cold place — and somewhere in the dark of Salt Wells the cold place stopped giving the world back.",
+    ()=> S.powerUses.thread>=S.powerUses.push && S.powerUses.thread>=S.powerUses.reach ?
+      "It's you, Sally. The threads stop resolving into choices and start resolving into <i>certainties</i>, and a certainty is just a future you've already stopped feeling. You watch your own hands do the smart thing, the optimal thing, and you cannot remember why optimal was supposed to matter. The town goes quiet. Then quieter. Then it's just the math, humming, and a road south, and your feet are already turning." :
+      S.powerUses.push>=S.powerUses.reach ?
+      "It's Rami. He pushed past the place where nerves come back from. He stops mid-stride, head cocked, listening to something none of you can hear. \"It's quiet,\" he says, wondering. \"Sally, it's so quiet.\" And he turns, gently, to face south, and will not be turned back." :
+      "It's Lina. She carried too much — the seated man, the nest, the living minds — and the last reach took the last of her. She smiles at you with someone else's peace. \"I'm not sad anymore,\" she says. \"Isn't that nice?\" And she walks south, toward the quiet, where nothing has to be felt ever again.",
+    "<span class='whisper'>This is how the world ends in Salt Wells. Not with teeth. With a calm that looks, from the outside, almost like relief. The silence got one more. It always does.</span>"
+  ]
+},
+end_bleed:{
+  ending:"death", art:"south",
+  banner:"Bleeding Out",
+  sub:"a death",
+  text:[
+    "Salt Wells took its tax in blood, a little at a time, until there wasn't enough left to keep moving.",
+    ()=> "You go down in the dust of a dead highway town, and the last thing you see is "+(S.lina==='lost'||S.rami==='lost'?"the place where your friends should be":"Lina's hands trying to hold you together and Rami's mouth shaping your name")+", and then the cold, and then nothing.",
+    "<span class='whisper'>Somewhere south, a father waits to die with your name in his mouth, and will not know that you went first, in a town not even the maps remember.</span>"
+  ]
+},
+end_nest:{
+  ending:"death", art:"diner",
+  banner:"Among the Hoarded Things",
+  sub:"a death",
+  text:[
+    "The nest takes you the way it takes everything — not with malice but with that terrible patient hunger, grey hands and looping mouths, dragging you down into the spiral of shoes and picture frames and mugs.",
+    "The last clear thought you have is that they're not cruel. They don't even know what they're doing. They just remember, dimly, that warm things belong in the nest, and you were so very warm.",
+    "<span class='whisper'>In the morning there will be three more shapes in the diner, swaying gently, and one of them will fold and refold a strip of waxed map until the paper wears away to nothing.</span>"
+  ]
+},
+end_pyre:{
+  ending:"death", art:"scorchers",
+  banner:"The Flame Was Waiting",
+  sub:"a death",
+  text:[
+    "They don't kill you in the street. Scorchers never waste a bright one. They collar you — a Neuro-Harmonic band that turns the Compass to dead weight and your gift to fog — and they walk you to the pyre they build in the town square out of pews and a child's tricycle.",
+    "The flame-mask handler reads your aura one last time, approving. \"The brightest burn cleanest, sister,\" she says, almost tender. \"You'll purify beautifully.\"",
+    "<span class='whisper'>The fire in Salt Wells that night was visible for miles. The seated man, facing south, did not turn to watch it. Some silences are deeper even than flame.</span>"
+  ]
+},
+end_lastsiege:{
+  ending:"death", art:"church",
+  banner:"No Back Door",
+  sub:"a death — you got stuck",
+  text:[
+    "You never opened the altar cache. You never found the tunnel the Loam always dig. So when you bar the church doors against the fire and the dark, you bar yourselves into a stone box with no way out.",
+    "You make them pay for it. Rami breaks the line twice; you read every gap there is to read; Lina drops three of them with their own buried terror. But a stone box is a stone box, and the Scorchers have all night and all the fire in the world.",
+    "<span class='whisper'>The lesson Salt Wells teaches, too late: in a Loam node, always find the second door before you need it. The roots always remember a way out. You just had to look.</span>"
+  ]
+},
+end_stuck_cooler:{
+  ending:"death", art:"diner",
+  banner:"The Cold Room",
+  sub:"a death — you got stuck",
+  text:[
+    "The walk-in cooler door swings shut behind you on a latch built to be opened only from outside, and the dark goes total and close and smelling of ten-year rot.",
+    "You pound. Rami pushes until his nose bleeds and his arm won't answer. You read every thread and they all end here. Outside, drawn by the noise, the nest gathers and waits with the infinite patience of things that have forgotten how to leave.",
+    "<span class='whisper'>They never open the door. They just lean against it, all night, all the next day, until the cold room goes as quiet as the rest of Salt Wells.</span>"
+  ]
+}
+
+};
+
+/* =========================================================================
+   ENGINE
+   ========================================================================= */
+const gameEl = document.getElementById('game');
+const titleEl = document.getElementById('title');
+const sceneEl = document.getElementById('scene');
+let endingsFound = JSON.parse(localStorage.getItem('sw_endings')||'{}'); // persists across reloads (allowed)
+
+function begin(){
+  Object.assign(S, freshState());
+  titleEl.classList.add('hidden');
+  gameEl.classList.remove('hidden');
+  go('intro');
+  window.scrollTo(0,0);
+}
+
+function resolveStr(v){ return (typeof v==='function')? v(S) : v; }
+
+function go(id){
+  // routers compute their target
+  if(id==='router_escape'){ id = pickEscapeEnding(); }
+  let node = SCENES[id];
+  if(!node){ console.error('missing node',id); return; }
+
+  // run side effects
+  if(node.do) node.do(S);
+  S.visited[id]=true;
+
+  // death/slide interception (after effects) for non-ending nodes
+  if(!node.ending){
+    if(S.hp<=0){ return go('end_bleed'); }
+    if(S.strain>=5 && !node.router){ return go('end_slide'); }
+  }
+
+  updateHUD();
+  if(node.ending){ renderEnding(id,node); }
+  else if(node.router){ /* handled above */ }
+  else { renderScene(node); }
+  window.scrollTo(0,0);
+}
+
+function pickEscapeEnding(){
+  // foot-escape resolution into the best-fitting ending
+  if(S.flags.slidehere || S.strain>=5) return 'end_slide';
+  if(S.hp<=0) return 'end_bleed';
+  if(S.flags.scorchhostile){
+    return (S.water||S.coil)? 'end_scorchburn' : 'end_scorchburn';
+  }
+  if(S.flags.linabroke) return 'end_linacost';
+  // the tactician's ending: leaned hard on intuition, spilled no blood, all out — checked first (it overlaps "clean")
+  if(S.water && S.coil && S.hp>=2 && S.lina==='ok' && S.rami==='ok' &&
+     S.powerUses.thread>=3 && S.powerUses.push===0){
+    return 'end_thread_master';
+  }
+  // truly clean foot escape: everything, everyone, barely scratched
+  if(S.water && S.coil && S.hp>=2 && S.strain<=2 && S.lina==='ok' && S.rami==='ok'){
+    return 'end_clean';
+  }
+  if(S.water||S.coil) return 'end_loamtunnel'; // got something, got out
+  return 'end_dryleave';
+}
+
+function buildArt(key){
+  if(!key) return '';
+  const a = ART[key]||{cap:'',file:key};
+  return `<div class="art">
+    <img src="art/${a.file}.jpg" alt="" onerror="this.classList.add('missing'); this.nextElementSibling.classList.remove('hide');">
+    <div class="placeholder">
+      <div class="ph-key">▣ art slot — ${a.file}</div>
+      <div class="ph-cap">${a.cap}</div>
+      <div class="ph-hint">drop a file at <b>art/${a.file}.jpg</b> to replace this card</div>
+    </div>
+  </div>`;
+}
+
+function renderScene(node){
+  let html = buildArt(node.art);
+  html += `<div class="scenehead"><div class="loc">${node.loc||''}</div>`;
+  if(node.sub) html += `<div class="sub">${node.sub}</div>`;
+  html += `</div>`;
+
+  html += `<div class="prose">`;
+  (node.text||[]).forEach((p,i)=>{
+    const txt = resolveStr(p);
+    if(!txt) return;
+    html += `<p${i===0&&!node.art?' class="first"':''}>${txt}</p>`;
+  });
+  html += `</div>`;
+
+  if(node.reveal){
+    const r = node.reveal;
+    html += `<div class="reveal ${r.c||''}">${resolveStr(r.t)}</div>`;
+  }
+
+  // choices
+  html += `<div class="choices">`;
+  (node.choices||[]).forEach((c,i)=>{
+    const ch = resolveStr(c); // some choices are functions returning obj (for dynamic null)
+    if(!ch) return;
+    if(ch.need && !ch.need(S)) return;
+    if(ch.once && S.flags['once_'+ch.once]) {
+      return; // hide one-time powers after use
+    }
+    const pcls = ch.p? ('p-'+ch.p) : '';
+    const tag = ch.p? `<span class="tag">${ch.p==='sally'?'Threads':ch.p==='rami'?'Push':'Reach'}</span>` : '';
+    const cost = ch.cost? `<span class="cost">${ch.cost}</span>` : '';
+    const sub = ch.sub? `<span class="sub2">${ch.sub}</span>` : '';
+    html += `<button class="choice ${pcls}" onclick="choose('${node._id}',${i})">${cost}${tag}${ch.t}${sub}</button>`;
+  });
+  html += `</div>`;
+
+  sceneEl.className='';
+  sceneEl.innerHTML = html;
+}
+
+function choose(nodeId,i){
+  const node = SCENES[nodeId];
+  let c = node.choices[i];
+  c = resolveStr(c);
+  if(!c) return;
+  if(c.once){ S.flags['once_'+c.once]=true; }
+  if(c.do) c.do(S);
+  go(c.to);
+}
+
+function renderEnding(id,node){
+  // record
+  if(!endingsFound[id]){ endingsFound[id]=true; localStorage.setItem('sw_endings',JSON.stringify(endingsFound)); }
+  const total = Object.keys(SCENES).filter(k=>SCENES[k].ending).length;
+  const found = Object.keys(endingsFound).length;
+
+  let html = buildArt(node.art);
+  html += `<div class="ending-banner">${node.banner}<small>${node.sub||''}</small></div>`;
+  html += `<div class="prose">`;
+  (node.text||[]).forEach(p=>{ const t=resolveStr(p); if(t) html+=`<p>${t}</p>`; });
+  html += `</div>`;
+
+  // status line
+  html += `<div class="prose" style="font-size:.82rem;color:var(--grey);border-top:1px solid var(--line);padding-top:12px;">
+    <b style="color:var(--paper-dim)">The ledger of Salt Wells:</b>
+    water ${S.water?'✔':'✗'} ·
+    coil ${S.coil?'✔':'✗'} ·
+    Lina ${S.lina} · Rami ${S.rami} ·
+    wounds ${['gone','grave','hurt','steady'][S.hp]} ·
+    strain ${S.strain}/5
+  </div>`;
+
+  html += `<div class="restart">
+    <button onclick="begin()">Walk In Again</button>
+    <button onclick="toTitle()">Title Screen</button>
+    <span class="tally">endings found: ${found} / ${total}</span>
+  </div>`;
+
+  sceneEl.className = 'tone-'+(node.ending);
+  sceneEl.innerHTML = html;
+}
+
+function toTitle(){
+  gameEl.classList.add('hidden');
+  titleEl.classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+
+/* ---------- HUD ---------- */
+function updateHUD(){
+  document.getElementById('clock').textContent = S.noise>=3?'night · loud':S.noise>=1?'dusk · stirring':'dusk';
+  pips('m-hp', S.hp, 3, 'hp');
+  pips('m-strain', S.strain, 5, 'strain');
+  pips('m-noise', S.noise, 3, 'noise');
+  const sq = document.getElementById('squad');
+  let chips = `<span class="chip ${S.lina}">Lina · ${labelComp(S.lina)}</span>
+               <span class="chip ${S.rami}">Rami · ${labelComp(S.rami)}</span>`;
+  if(S.water) chips += `<span class="chip item">water</span>`;
+  if(S.coil) chips += `<span class="chip item">coil</span>`;
+  if(has('token')) chips += `<span class="chip item">loam token</span>`;
+  if(has('blade')) chips += `<span class="chip item">salt-iron blade</span>`;
+  if(has('key')) chips += `<span class="chip item">brass key</span>`;
+  if(has('maps')) chips += `<span class="chip item">maps east</span>`;
+  if(has('food')) chips += `<span class="chip item">food</span>`;
+  sq.innerHTML = chips;
+}
+function labelComp(s){ return s==='ok'?'steady':s==='hurt'?'hurt':'lost'; }
+function pips(elid,val,max,cls){
+  const el=document.getElementById(elid); let h='';
+  for(let i=0;i<max;i++){ h+=`<div class="pip ${i<val?'on '+cls:''}"></div>`; }
+  el.innerHTML=h;
+}
+
+/* attach ids to scenes for choose() */
+Object.keys(SCENES).forEach(k=>{ SCENES[k]._id=k; });
+</script>
+</body>
+</html>
